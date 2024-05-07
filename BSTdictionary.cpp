@@ -1,243 +1,229 @@
 #include <iostream>
+#include <string>
+#include <vector>
 using namespace std;
-class node
-{
+class DictNode {
 public:
-    string word;
-    string meaning;
-    node *left, *right;
-};
-class BST
-{
-public:
-    node *root;
-    BST()
-    {
-        root = NULL;
-    }
-
-    void CreateTree(node *&root)
-    {
-        node *temp = new node;
-        cout << "Enter root node of tree (data):- " << endl;
-        cin >> temp->word;
-        cout << "Enter the Meaning :" << endl;
-        cin >> temp->meaning;
-        temp->left = NULL;
-        temp->right = NULL;
-        if (root == NULL)
-        {
-            root = temp;
-        }
-        else
-        {
-            InsertNode(root, temp);
-        }
-    }
-
-    void InsertNode(node *root, node *temp)
-    {
-        if (root == NULL)
-        {
-            cout << "Tree is empty...." << endl;
-        }
-        else if (root->word > temp->word)
-        {
-            if (root->left == NULL)
-            {
-                root->left = temp;
-            }
-            else
-            {
-                InsertNode(root->left, temp);
-            }
-        }
-        else
-        {
-            if (root->right == NULL)
-            {
-                root->right = temp;
-            }
-            else
-            {
-                InsertNode(root->right, temp);
-            }
-        }
-    }
-    void InorderDisplay(node *root)
-    {
-        if (root == NULL)
-        {
-            return;
-        }
-        else
-        {
-            InorderDisplay(root->left);
-            cout << root->word << "->";
-            cout << root->meaning << endl;
-            InorderDisplay(root->right);
-        }
-    }
-    void Search(node *root, string key)
-    {
-        if (root == NULL)
-        {
-            cout << "Key is not present in Tree" << endl;
-            return;
-        }
-        if (root->word > key)
-        {
-            Search(root->left, key);
-        }
-        else if (root->word < key)
-        {
-            Search(root->right, key);
-        }
-        else // (root->word == key)
-        {
-            cout << "Key is present in tree" << endl;
-            return;
-        }
-    }
-    node *modify(node *root, string val, string mean)
-    {
-        if (root == NULL)
-        {
-            cout << "tree is empty" << endl;
-            return NULL;
-        }
-        if (root->word > val)
-        {
-            root->left = modify(root->left, val, mean);
-        }
-        else if (root->word < val)
-        {
-            root->right = modify(root->right, val, mean);
-        }
-        else
-        {
-            root->meaning = mean;
-        }
-        return root;
-    }
-    node *deletenode(node *root, string value)
-    {
-        if (root == NULL)
-        {
-            return NULL;
-        }
-        else if (value < root->word)
-        {
-            root->left = deletenode(root->left, value);
-        }
-        else if (value > root->word)
-        {
-            root->right = deletenode(root->right, value);
-        }
-        else
-        {
-            if (root->left == NULL && root->right == NULL)
-            {
-                delete root;
-                return NULL;
-            }
-            else if (root->right == NULL)
-            {
-                node *temp = root;
-                root = root->left;
-                delete temp;
-                return root;
-            }
-            else if (root->left == NULL)
-            {
-                node *temp = root;
-                root = root->right;
-                delete temp;
-                return root;
-            }
-            else
-            {
-                node *temp = findmax(root->left);
-                root->word = temp->word;
-                root->left = deletenode(root->left, temp->word);
-            }
-        }
-        return root;
-    }
-
-    node *findmax(node *root)
-    {
-        if (root == NULL)
-            return NULL;
-        else if (root->right == NULL)
-            return root;
-        else
-            return findmax(root->right);
-    }
-};
-int main()
-{
-    BST b;
-    int ch;
     string key;
-    bool ch1 = true;
-    string mean;
-    string val, value;
-    while (ch1)
-    {
-        cout << "1.Create Tree" << endl;
-        cout << "2.Insert Element." << endl;
-        cout << "3.Display Tree." << endl;
-        cout << "4.Search the element" << endl;
-        cout << "5.modify" << endl;
-        cout << "6.Delete" << endl;
-        cout << "Enter your choice : " << endl;
-        cin >> ch;
-        switch (ch)
-        {
+    string meaning;
+    DictNode* left;
+    DictNode* right;
+    DictNode(const string& k, const string& m) : key(k), meaning(m), left(nullptr), right(nullptr) {}
+};
+class Dictionary {
+private:
+    int comparisons;
+    DictNode* root;
+    vector<DictNode*> insertionOrder;
+    public:
+    Dictionary() : root(nullptr) {}
+    void add(const string& key, const string& meaning) {
+        root = sum(root, key, meaning);
+    }
+    void remove(const string& key) {
+        root = removeNode(root, key);
+    }
+    void find(const string& key) {
+        comparisons = 0;
+        DictNode* result = searching(root, key);
+        if (result != nullptr) {
+            cout << "Keyword found.\n";cout << "Keyword: " << result->key << ", Meaning: " << result->meaning << "\n";
+            cout << "Number of comparisons: " << comparisons << "\n";
+        } else {
+            cout << "Keyword not found.\n";
+        }
+    }
+    void update(const string& key) {
+        comparisons = 0;
+        DictNode* result = searching(root, key);
+        if (result != nullptr) {
+            cout << "Enter the updated meaning of the keyword:\n";
+            cin.ignore();
+            getline(cin, result->meaning);
+            cout << "Meaning of keyword '" << key << "' updated successfully.\n";
+        } else {
+            cout << "Keyword not found. Cannot update meaning.\n";
+        }
+    }
+    void display() {
+        if (!insertionOrder.empty()) {
+            for (DictNode* node : insertionOrder) {
+                cout << "Keyword: " << node->key << ", Meaning: " << node->meaning << "\n";
+            }
+        } else {
+            cout << "\nDictionary is empty.\n";
+        }
+    }
+    void ascending() {
+        if (root != nullptr) {
+            Inorder(root);
+        } else {
+            cout << "\nDictionary is empty.\n";
+        }
+    }
+    void descending() {
+        if (root != nullptr) {
+            inverseInorder(root);
+        } else {
+            cout << "\nDictionary is empty.\n";
+        }
+    }
+    int Maxcompare() {
+       return Maxheight(root);
+    }
+    private:
+        DictNode* sum(DictNode* node, const string& key, const string& meaning) {
+        if (node == nullptr) {
+            DictNode* newNode = new DictNode(key, meaning);
+            insertionOrder.push_back(newNode);
+            return newNode;
+            }
+            int result = key.compare(node->key);
+            if (result < 0) {
+                node->left = sum(node->left, key, meaning);
+            } else if (result > 0) {
+                node->right = sum(node->right, key, meaning);
+            } else {
+                cout << "Keyword already exists.\n";
+            }
+            return node;
+        }
+        void Inorder(DictNode* node) {
+        if (node != nullptr) {
+        Inorder(node->left);
+        cout << "Keyword: " << node->key << ", Meaning: " << node->meaning << "\n";
+        Inorder(node->right);
+        }
+    }
+    void inverseInorder(DictNode* node) {
+        if (node != nullptr) {
+            inverseInorder(node->right);
+            cout << "Keyword: " << node->key << ", Meaning: " << node->meaning << "\n";
+            inverseInorder(node->left);
+        }
+    }
+    DictNode* removeNode(DictNode* node, const string& key) {
+        if (node == nullptr) {
+            return nullptr;
+        }
+        int result = key.compare(node->key);
+        if (result < 0) {
+            node->left = removeNode(node->left, key);
+        } else if (result > 0) {
+            node->right = removeNode(node->right, key);
+        } else {
+        if (node->left == nullptr) {
+            DictNode* temp = node->right;
+            delete node;
+            return temp;
+        } else if (node->right == nullptr) {
+            DictNode* temp = node->left;
+            delete node;
+            return temp;
+        }
+        DictNode* temp = findMin(node->right);
+        node->key = temp->key;
+        node->meaning = temp->meaning;
+        node->right = removeNode(node->right, temp->key);
+        }
+        return node;
+    }
+    DictNode* findMin(DictNode* node) {
+        while (node->left != nullptr) {
+            node = node->left;
+            }
+        return node;
+        }
+    DictNode* searching(DictNode* node, const string& key) {
+        comparisons++;
+        if (node == nullptr || key == node->key) {
+            return node;
+        }
+        if (key < node->key) {
+            return searching(node->left, key);
+        } else {
+            return searching(node->right, key);
+        }
+    }
+    int Maxheight(DictNode* node) {
+        if (node == nullptr) {
+            return 0;
+        }
+        int leftHeight = Maxheight(node->left);
+        int rightHeight = Maxheight(node->right);return max(leftHeight, rightHeight) + 1;
+    }
+};
+int main() {
+    Dictionary dictionary;
+    int choice;
+    string key, meaning;
+    do {
+        cout << "\nMenu:\n";
+        cout << "1. Add keyword\n";
+        cout << "2. Display dictionary\n";
+        cout << "3. Delete keyword\n";
+        cout << "4. Find keyword\n";
+        cout << "5. Update meaning\n";
+        cout << "6. Max comparisons\n";
+        cout << "7. Display dictionary (ascending/descending)\n";
+        cout << "8. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+        switch (choice) {
         case 1:
-            b.CreateTree(b.root);
-            cout << "Tree created successfully....." << endl;
+            cout << "Enter keyword: ";
+            cin >> key;
+            cout << "Enter meaning: ";
+            cin.ignore();
+            getline(cin, meaning);
+            dictionary.add(key, meaning);
             break;
         case 2:
-            node *temp;
-            temp = new node;
-            cout << "Enter new node data:- ";
-            cin >> temp->word;
-            cout << "Enter The Meaning :" << endl;
-            cin >> temp->meaning;
-            temp->left = NULL;
-            temp->right = NULL;
-            b.InsertNode(b.root, temp);
-            cout << "Node added successfully....." << endl;
+            cout << "Displaying dictionary:\n";
+            dictionary.display();
             break;
         case 3:
-            cout << "node in tree are - " << endl;
-            b.InorderDisplay(b.root);
+            cout << "Enter keyword to remove: ";
+            cin >> key;
+            dictionary.remove(key);
             break;
         case 4:
-            cout << "Enter the key want to find:- ";
+            cout << "Enter keyword to find: ";
             cin >> key;
-            b.Search(b.root, key);
+            dictionary.find(key);
             break;
         case 5:
-            cout << " Enter the data to modify meaning" << endl;
-            cin >> val;
-            cout << "Enter meaning " << endl;
-            cin >> mean;
-            b.modify(b.root, val, mean);
+            cout << "Enter keyword to update: ";
+            cin >> key;
+            dictionary.update(key);
             break;
         case 6:
-            cout << "Enter the data to delete :" << endl;
-            cin >> value;
-            b.deletenode(b.root, value);
-            cout << "node deleted ..." << endl;
+            cout << "Maximum comparisons required: " << dictionary.Maxcompare() << "\n";
             break;
-
+        case 7:
+        int displayChoice;
+            cout << "Choose display order:\n";
+            cout << "1. Ascending order\n";
+            cout << "2. Descending order\n";
+            cin >> displayChoice;
+            if (displayChoice == 1) {
+                cout << "Displaying dictionary in ascending order:\n";
+                dictionary.ascending();
+            }
+            else if (displayChoice == 2) {
+                cout << "Displaying dictionary in descending order:\n";
+                dictionary.descending();
+            } else {
+                cout << "Invalid choice for display order.\n";
+            }
+            break;
+        case 8:
+            cout << "Exiting program.\n";
+            break;
         default:
-            ch1 = false;
+            cout << "Invalid choice. Please enter a number between 1 and 8.\n";
             break;
         }
-    }
+    } while (choice != 8);
     return 0;
 }
