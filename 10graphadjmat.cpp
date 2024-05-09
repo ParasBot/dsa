@@ -1,207 +1,140 @@
 #include <iostream>
+#include <string>
 #include <queue>
-#include <vector>
 #include <stack>
+
 using namespace std;
 
-class Graph
-{
-private:
-    int size;
-    vector<vector<int>> adjacency_matrix;
-    vector<int> visited1;
-    vector<int> visited2;
-    vector<string> cities;
-    char ch;
+const int MAX_CITIES = 10;
 
-public:
-    Graph()
-    {
-        cout << "Total Number of Cities:- ";
-        cin >> size;
-        cout << endl;
-        adjacency_matrix.resize(size, vector<int>(size, 0));
-        visited1.resize(size, 0);
-        visited2.resize(size, 0);
-        cities.resize(size);
+int route[MAX_CITIES][MAX_CITIES] = {0};
+int nc;
+string ap[MAX_CITIES];
+
+void Insert() {
+    cout << "\nEnter no. of cities: ";
+    cin >> nc;
+
+    for (int i = 0; i < nc; i++) {
+        cout << "Enter City " << i + 1 << " : ";
+        cin >> ap[i];
     }
 
-    void take_cities()
-    {
-        for (int m = 0; m < size; m++)
-        {
-            cout << "Enter City " << m + 1 << " Name:- ";
-            cin >> cities[m];
+    for (int i = 0; i < nc; i++) {
+        for (int j = i + 1; j < nc; j++) {
+            cout << "Enter distance between " << ap[i] << " and " << ap[j] << " : ";
+            cin >> route[i][j];
+            route[j][i] = route[i][j];
         }
     }
+}
 
-    void take_flight()
-    {
-        for (int i = 0; i < size; i++)
-        {
-            adjacency_matrix[i][i] = 0;
-            for (int j = i + 1; j < size; j++)
-            {
-                cout << "\nIs there a flight between " << cities[i] << " to " << cities[j] << " (y/n):- ";
-                cin >> ch;
-                if (ch == 'y' || ch == 'Y')
-                {
-                    cout << "Enter flight time/cost :- ";
-                    cin >> adjacency_matrix[i][j];
-                    adjacency_matrix[j][i] = adjacency_matrix[i][j];
-                }
-                else
-                {
-                    adjacency_matrix[i][j] = 0;
-                    adjacency_matrix[j][i] = 0;
-                }
-            }
-        }
+void Display() {
+    cout << "\nDisplay cities with airport code: " << endl;
+
+    for (int i = 0; i < nc; i++) {
+        cout << "City " << i + 1 << " -> " << ap[i] << endl;
     }
+}
 
-    void DFS_traversal()
-    {
-        stack<string> DFS_stack;
-        DFS_stack.push(cities[0]);
-        visited2[0] = 1;
-        while (!DFS_stack.empty())
-        {
-            string city = DFS_stack.top();
-            DFS_stack.pop();
-            cout << city << "\t\t";
-            for (int i = 0; i < size; i++)
-            {
-                if (cities[i] == city)
-                {
-                    for (int j = 0; j < size; j++)
-                    {
-                        if (adjacency_matrix[i][j] && !visited2[j])
-                        {
-                            DFS_stack.push(cities[j]);
-                            visited2[j] = 1;
-                        }
-                    }
-                }
-            }
+void DisplayGraph() {
+    cout << "\nAdjacency Matrix representation of graph: " << endl;
+
+    for (int i = 0; i < nc; i++) {
+        for (int j = 0; j < nc; j++) {
+            cout << route[i][j] << "\t";
         }
         cout << endl;
     }
+}
 
-    void BFS_traversal()
-    {
-        queue<string> BFS_queue;
-        BFS_queue.push(cities[0]);
-        visited1[0] = 1;
-        while (!BFS_queue.empty())
-        {
-            string city = BFS_queue.front();
-            BFS_queue.pop();
-            cout << city << "\t\t";
-            for (int i = 0; i < size; i++)
-            {
-                if (cities[i] == city)
-                {
-                    for (int j = 0; j < size; j++)
-                    {
-                        if (adjacency_matrix[i][j] && !visited1[j])
-                        {
-                            BFS_queue.push(cities[j]);
-                            visited1[j] = 1;
-                        }
-                    }
+void DFSUtil(int current, bool visited[]) {
+    visited[current] = true;
+    for (int i = 0; i < nc; i++) {
+        if (route[current][i] != 0 && !visited[i]) {
+            DFSUtil(i, visited);
+        }
+    }
+}
+
+bool IsConnected() {
+    bool visited[MAX_CITIES] = {false};
+    DFSUtil(0, visited);
+    for (int i = 0; i < nc; i++) {
+        if (!visited[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void DFS(int start) {
+    bool visited[MAX_CITIES] = {false};
+    stack<int> s;
+
+    cout << "\nDFS Traversal: ";
+
+    s.push(start);
+    while (!s.empty()) {
+        int current = s.top();
+        s.pop();
+        if (!visited[current]) {
+            cout << ap[current] << " ";
+            visited[current] = true;
+
+            for (int i = 0; i < nc; i++) {
+                if (route[current][i] != 0 && !visited[i]) {
+                    s.push(i);
                 }
             }
         }
-        cout << endl;
     }
 
-    void display_adje()
-    {
-        cout << endl
-             << endl;
-        cout << "Adjacency matrix--->" << endl;
-        for (int i = 0; i < size; i++)
-        {
-            for (int j = 0; j < size; j++)
-            {
-                cout << adjacency_matrix[i][j] << "\t";
-            }
-            cout << endl;
-        }
-    }
+    cout << endl;
+}
 
-    void display_visited1()
-    {
-        cout << "Visited matrix 1--->" << endl;
-        for (int v = 0; v < size; v++)
-        {
-            cout << visited1[v] << "\t";
-        }
-        cout << endl;
-    }
+void BFS(int start) {
+    bool visited[MAX_CITIES] = {false};
+    queue<int> q;
+    cout << "\nBFS Traversal: ";
+    q.push(start);
+   
+    while (!q.empty()) {
+        int current = q.front();
+        q.pop();
 
-    void display_visited2()
-    {
-        cout << "Visited matrix 2--->" << endl;
-        for (int v = 0; v < size; v++)
-        {
-            cout << visited2[v] << "\t";
-        }
-        cout << endl;
-    }
+        if (!visited[current]) {
+            cout << ap[current] << " ";
+            visited[current] = true;
 
-    int is_connected1()
-    {
-        for (int s = 0; s < size; s++)
-        {
-            if (visited1[s] != 1)
-            {
-                return -1;
+            for (int i = 0; i < nc; i++) {
+                if (route[current][i] != 0 && !visited[i]) {
+                    q.push(i);
+                }
             }
         }
-        return 1;
+    }
+    cout << endl;
+}
+
+int main() {
+    Insert();
+    Display();
+    DisplayGraph();
+   
+    int start;
+    cout << "\nEnter the starting vertex for traversal: ";
+    cin >> start;
+    BFS(start);
+    DFS(start);
+   
+    if (IsConnected()) {
+        cout << "\nThe graph is connected." << endl;
+    } else {
+        cout << "\nThe graph is not connected." << endl;
     }
 
-    int is_connected2()
-    {
-        for (int s = 0; s < size; s++)
-        {
-            if (visited2[s] != 1)
-            {
-                return -1;
-            }
-        }
-        return 1;
-    }
-};
+    cout << "\n\tExiting...\n";
 
-int main()
-{
-    Graph G1;
-    G1.take_cities();
-    G1.take_flight();
-    G1.display_adje();
-    cout << "\n\nUsing BFS--->" << endl;
-    G1.BFS_traversal();
-    G1.display_visited1();
-    if (G1.is_connected1() == 1)
-    {
-        cout << "\nGraph is connected " << endl;
-    }
-    else
-    {
-        cout << "\nGraph is not connected " << endl;
-    }
-    cout << "\n\nUsing DFS--->" << endl;
-    G1.DFS_traversal();
-    G1.display_visited2();
-    if (G1.is_connected2() == 1)
-    {
-        cout << "\nGraph is connected " << endl;
-    }
-    else
-    {
-        cout << "\nGraph is not connected " << endl;
-    }
     return 0;
 }
