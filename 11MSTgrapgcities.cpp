@@ -1,88 +1,83 @@
 #include <iostream>
 #include <vector>
-#include <string>
-#include <queue>
 using namespace std;
+const int MaxCost = 999;
+void primsMST(int n, vector<vector<int>>& cost)
+{
+    vector<int> visit(n + 1, 0);
+    int mincost = 0;
 
-struct Edge {
-    int to;
-    int cost;
+    int s;
+    cout << "Enter Starting Vertex (1 to " << n << "): ";
+    cin >> s;
+    visit[s] = 1;
 
-    Edge(int _to, int _cost) : to(_to), cost(_cost) {}
-};
+    cout << "Selected Edges in MST:" << endl;
+    for (int k = 1; k < n; ++k)
+    {
+        int min = MaxCost;
+        int row, col;
 
-struct CompareEdge {
-    bool operator()(const Edge& e1, const Edge& e2) {
-        return e1.cost > e2.cost;
-    }
-};
-
-void primsMST(int n, const vector<vector<int>>& cost, const vector<string>& offices) {
-    priority_queue<Edge, vector<Edge>, CompareEdge> pq;
-    vector<bool> visited(n, false);
-    visited[0] = true;
-
-    cout << "\nSelected Edges in MST:" << endl;
-    int totalMinCost = 0;
-
-    for (int j = 0; j < n; j++) {
-        if (cost[0][j] != -1) {
-            pq.push(Edge(j, cost[0][j]));
-        }
-    }
-
-    while (!pq.empty()) {
-        Edge e = pq.top();
-        pq.pop();
-
-        if (visited[e.to]) {
-            continue;
-        }
-
-        visited[e.to] = true;
-        cout << "Edge: " << offices[e.to] << " - " << offices[e.to] << endl;
-        totalMinCost += e.cost;
-
-        for (int j = 0; j < n; j++) {
-            if (!visited[j] && cost[e.to][j] != -1) {
-                pq.push(Edge(j, cost[e.to][j]));
+        for (int i = 1; i <= n; ++i)
+        {
+            if (visit[i] == 1) {
+                for (int j = 1; j <= n; ++j)
+                {
+                    if (visit[j] == 0 && cost[i][j] != -1 && min > cost[i][j])
+                    {
+                        min = cost[i][j];
+                        row = i;
+                        col = j;
+                    }
+                }
             }
         }
+
+        cout << "Edge: " << row << " - " << col << endl;
+        mincost += min;
+        visit[col] = 1;
+        cost[row][col] = -1;
+        cost[col][row] = -1;
     }
 
-    cout << "\nTotal Min Cost: " << totalMinCost << endl;
+    cout << "Total Min Cost: " << mincost << endl;
 }
 
-int main() {
+int main()
+{
     int n;
-    cout << "\nEnter the number of offices: ";
+    cout << "Enter the number of cities: ";
     cin >> n;
-    cout << endl;
 
-    vector<string> offices(n);
-    vector<vector<int>> cost(n, vector<int>(n, -1));
+    string cities[n];
 
-    for (int i = 0; i < n; i++) {
-        cout << "Enter office " << i + 1 << " name: ";
-        cin >> offices[i];
+    for (int i = 0; i < n; i++)
+    {
+        cout << "Enter city " << i + 1 << ": ";
+        cin >> cities[i];
     }
 
-    for (int i = 0; i < n; i++) {
-        for (int j = i + 1; j < n; j++) {
-            char op;
-            cout << "\nIs there a connection between " << offices[i] << " and " << offices[j] << " (y/n)?: ";
-            cin >> op;
+    vector<vector<int>> cost(n + 1, vector<int>(n + 1, 0));
 
-            if (op == 'y' || op == 'Y') {
-                cout << "Enter Cost: ";
+    for (int i = 1; i <= n; i++) {
+        for (int j = i + 1; j <= n; j++)
+        {
+            char op;
+            cout << "Is there an edge between " << cities[i - 1] << " and " << cities[j - 1] << " (y/n)? ";
+            cin >> op;
+            if (op == 'y' || op == 'Y')
+            {
+                cout << "Enter time: ";
                 cin >> cost[i][j];
                 cost[j][i] = cost[i][j];
             }
+            else {
+                cost[i][j] = cost[j][i] = -1;
+            }
         }
     }
 
-    cout << endl;
-    primsMST(n, cost, offices);
+    primsMST(n, cost);
 
     return 0;
 }
